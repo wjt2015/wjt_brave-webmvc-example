@@ -91,7 +91,7 @@ public abstract class MyAbstractDispatcherServletInitializer extends AbstractCon
                 "createServletApplicationContext() did not return an application " +
                         "context for servlet [" + servletName + "]");
 
-        FrameworkServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
+        DispatcherServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
         dispatcherServlet.setContextInitializers(getServletApplicationContextInitializers());
 
         ServletRegistration.Dynamic registration = servletContext.addServlet(servletName, dispatcherServlet);
@@ -138,7 +138,7 @@ public abstract class MyAbstractDispatcherServletInitializer extends AbstractCon
      * <p>Note: This allows for any {@link FrameworkServlet} subclass as of 4.2.3.
      * Previously, it insisted on returning a {@link DispatcherServlet} or subclass thereof.
      */
-    protected FrameworkServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
+    protected DispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
         return new DispatcherServlet(servletAppContext);
     }
 

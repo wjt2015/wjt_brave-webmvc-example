@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
 @Slf4j
 @EnableWebMvc
 @RestController
@@ -17,11 +18,13 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @CrossOrigin // So that javascript can be hosted elsewhere
 public class Frontend {
 
-  @Autowired RestTemplate restTemplate;
+    @Autowired
+    RestTemplate restTemplate;
 
-  @RequestMapping("/") public String callBackend() {
-    String result = restTemplate.getForObject("http://localhost:9000/api", String.class);
-    log.info("restTemplate={};result={};",restTemplate,result);
-    return result;
-  }
+    @RequestMapping("/")
+    public String callBackend() {
+        String result = restTemplate.getForObject("http://localhost:9000/api", String.class);
+        log.info("restTemplate={};result={};", restTemplate, result);
+        return result;
+    }
 }
