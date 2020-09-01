@@ -1,6 +1,7 @@
 package brave.webmvc;
 
 import brave.CurrentSpanCustomizer;
+import brave.MyCurrentSpanCustomizer;
 import brave.SpanCustomizer;
 import brave.Tracing;
 import brave.baggage.BaggageField;
@@ -102,7 +103,7 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
      */
     @Bean
     SpanCustomizer spanCustomizer(Tracing tracing) {
-        final CurrentSpanCustomizer currentSpanCustomizer = CurrentSpanCustomizer.create(tracing);
+        final MyCurrentSpanCustomizer currentSpanCustomizer = MyCurrentSpanCustomizer.create(tracing);
         log.info("tracing={};currentSpanCustomizer={};", tracing, currentSpanCustomizer);
         return currentSpanCustomizer;
     }
