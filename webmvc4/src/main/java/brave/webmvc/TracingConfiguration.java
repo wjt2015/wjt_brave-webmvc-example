@@ -10,12 +10,12 @@ import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.context.log4j2.ThreadContextScopeDecorator;
 import brave.http.HttpTracing;
 import brave.httpclient.TracingHttpClientBuilder;
-import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext.ScopeDecorator;
+import brave.propagation.MyB3Propagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.spring.webmvc.DelegatingTracingFilter;
-import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
+import brave.spring.webmvc.MySpanCustomizingAsyncHandlerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +29,8 @@ import zipkin2.reporter.Sender;
 import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 import zipkin2.reporter.okhttp3.OkHttpSender;
 
+import javax.annotation.Resource;
+
 /**
  * This adds tracing configuration to any web mvc controllers or rest template clients.
  *
@@ -39,7 +41,7 @@ import zipkin2.reporter.okhttp3.OkHttpSender;
 @Slf4j
 @Configuration
 // Importing this class is effectively the same as declaring bean methods
-@Import(SpanCustomizingAsyncHandlerInterceptor.class)
+@Import(MySpanCustomizingAsyncHandlerInterceptor.class)
 public class TracingConfiguration extends WebMvcConfigurerAdapter {
     static final BaggageField USER_NAME = BaggageField.create("userName");
 
@@ -57,7 +59,7 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
      */
     @Bean
     Propagation.Factory propagationFactory() {
-        return BaggagePropagation.newFactoryBuilder(B3Propagation.FACTORY)
+        return BaggagePropagation.newFactoryBuilder(MyB3Propagation.FACTORY)
                 .add(SingleBaggageField.newBuilder(USER_NAME).addKeyName("user_name").build())
                 .build();
     }
@@ -123,8 +125,8 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
         return TracingHttpClientBuilder.create(httpTracing).build();
     }
 
-    @Autowired
-    SpanCustomizingAsyncHandlerInterceptor serverInterceptor;
+    @Resource(name = "mySpanCustomizingAsyncHandlerInterceptor")
+    MySpanCustomizingAsyncHandlerInterceptor serverInterceptor;
 
     /**
      * adds tracing to the application-defined web controller

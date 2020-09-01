@@ -32,7 +32,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.AbstractContextLoaderInitializer;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
-import org.springframework.web.servlet.FrameworkServlet;
+import org.springframework.web.servlet.MyDispatcherServlet;
 
 /**
  * Base class for {@link org.springframework.web.WebApplicationInitializer}
@@ -91,7 +91,7 @@ public abstract class MyAbstractDispatcherServletInitializer extends AbstractCon
                 "createServletApplicationContext() did not return an application " +
                         "context for servlet [" + servletName + "]");
 
-        DispatcherServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
+        MyDispatcherServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
         dispatcherServlet.setContextInitializers(getServletApplicationContextInitializers());
 
         ServletRegistration.Dynamic registration = servletContext.addServlet(servletName, dispatcherServlet);
@@ -138,8 +138,8 @@ public abstract class MyAbstractDispatcherServletInitializer extends AbstractCon
      * <p>Note: This allows for any {@link FrameworkServlet} subclass as of 4.2.3.
      * Previously, it insisted on returning a {@link DispatcherServlet} or subclass thereof.
      */
-    protected DispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
-        return new DispatcherServlet(servletAppContext);
+    protected MyDispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
+        return new MyDispatcherServlet(servletAppContext);
     }
 
     /**
