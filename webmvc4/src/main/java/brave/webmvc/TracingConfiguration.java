@@ -135,6 +135,7 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        log.info("addInterceptor;serverInterceptor={};", serverInterceptor);
         registry.addInterceptor(serverInterceptor);
     }
 }
