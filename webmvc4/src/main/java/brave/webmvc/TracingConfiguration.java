@@ -28,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
+import zipkin2.reporter.okhttp3.MyOkHttpSender;
 import zipkin2.reporter.okhttp3.OkHttpSender;
 
 import javax.annotation.Resource;
@@ -70,7 +71,7 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
      */
     @Bean
     Sender sender() {
-        return OkHttpSender.create("http://127.0.0.1:9411/api/v2/spans");
+        return MyOkHttpSender.create("http://127.0.0.1:9411/api/v2/spans");
     }
 
     /**
