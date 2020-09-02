@@ -8,6 +8,7 @@ import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagation;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
+import brave.context.log4j2.MyThreadContextScopeDecorator;
 import brave.context.log4j2.ThreadContextScopeDecorator;
 import brave.http.HttpTracing;
 import brave.httpclient.TracingHttpClientBuilder;
@@ -52,8 +53,10 @@ public class TracingConfiguration extends WebMvcConfigurerAdapter {
      */
     @Bean
     ScopeDecorator correlationScopeDecorator() {
-        return ThreadContextScopeDecorator.newBuilder()
+        ScopeDecorator scopeDecorator = MyThreadContextScopeDecorator.newBuilder()
                 .add(SingleCorrelationField.create(USER_NAME)).build();
+        log.info("scopeDecorator={};", scopeDecorator);
+        return scopeDecorator;
     }
 
     /**

@@ -21,28 +21,33 @@ import brave.internal.propagation.InjectorFactory.InjectorFunction;
 import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContext.Injector;
+
 import java.util.Collections;
 import java.util.List;
 
 import static brave.propagation.B3SingleFormat.parseB3SingleFormat;
-import static brave.propagation.B3SingleFormat.writeB3SingleFormat;
-import static brave.propagation.B3SingleFormat.writeB3SingleFormatWithoutParentId;
 import static java.util.Arrays.asList;
 
 /**
  * Implements <a href="https://github.com/openzipkin/b3-propagation">B3 Propagation</a>
  */
 // This type was never returned, but we keep the signature for historical reasons
-public abstract class MyB3Propagation<K> implements Propagation<K> {
-    /** Describes the formats used to inject headers. */
+public abstract class MyB3Propagation<K> implements MyPropagation<K> {
+    /**
+     * Describes the formats used to inject headers.
+     */
     public enum Format implements InjectorFunction {
-        /** The trace context is encoded with a several fields prefixed with "x-b3-". */
+        /**
+         * The trace context is encoded with a several fields prefixed with "x-b3-".
+         */
         MULTI() {
-            @Override public List<String> keyNames() {
+            @Override
+            public List<String> keyNames() {
                 return MULTI_KEY_NAMES;
             }
 
-            @Override public <R> void inject(Setter<R, String> setter, TraceContext context, R request) {
+            @Override
+            public <R> void inject(Setter<R, String> setter, MyTraceContext context, R request) {
                 setter.put(request, TRACE_ID, context.traceIdString());
                 setter.put(request, SPAN_ID, context.spanIdString());
                 String parentId = context.parentIdString();
@@ -54,24 +59,33 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
                 }
             }
         },
-        /** The trace context is encoded with {@link B3SingleFormat#writeB3SingleFormat(TraceContext)}. */
+        /**
+         * The trace context is encoded with {@link B3SingleFormat#writeB3SingleFormat(TraceContext)}.
+         */
         SINGLE() {
-            @Override public List<String> keyNames() {
+            @Override
+            public List<String> keyNames() {
                 return SINGLE_KEY_NAMES;
             }
 
-            @Override public <R> void inject(Setter<R, String> setter, TraceContext context, R request) {
-                setter.put(request, B3, writeB3SingleFormat(context));
+            @Override
+            public <R> void inject(Setter<R, String> setter, MyTraceContext context, R request) {
+                //setter.put(request, B3, writeB3SingleFormat(context));
+                setter.put(request, B3, MyB3SingleFormat.writeB3SingleFormat(context));
             }
         },
-        /** The trace context is encoded with {@link B3SingleFormat#writeB3SingleFormatWithoutParentId(TraceContext)}. */
+        /**
+         * The trace context is encoded with {@link B3SingleFormat#writeB3SingleFormatWithoutParentId(TraceContext)}.
+         */
         SINGLE_NO_PARENT() {
-            @Override public List<String> keyNames() {
+            @Override
+            public List<String> keyNames() {
                 return SINGLE_KEY_NAMES;
             }
 
-            @Override public <R> void inject(Setter<R, String> setter, TraceContext context, R request) {
-                setter.put(request, B3, writeB3SingleFormatWithoutParentId(context));
+            @Override
+            public <R> void inject(Setter<R, String> setter, MyTraceContext context, R request) {
+                setter.put(request, B3, MyB3SingleFormat.writeB3SingleFormatWithoutParentId(context));
             }
         };
 
@@ -81,16 +95,16 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
         );
     }
 
-    public static final Propagation.Factory FACTORY = new MyB3Propagation.Factory(newFactoryBuilder());
+    public static final MyPropagation.Factory FACTORY = new MyB3Propagation.Factory(newFactoryBuilder());
 
-    static final Propagation<String> INSTANCE = FACTORY.get();
+    static final MyPropagation<String> INSTANCE = FACTORY.get();
 
     /**
      * Returns a singleton default instance.
      *
      * @since 5.12
      */
-    public static Propagation<String> get() {
+    public static MyPropagation<String> get() {
         return INSTANCE;
     }
 
@@ -143,7 +157,7 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
 
         /**
          * Like {@link #injectFormat}, but writes two formats.
-         *
+         * <p>
          * For example, you can set {@link Kind#CLIENT} spans to inject both {@link Format#MULTI} and
          * {@link Format#SINGLE}, for transition use cases.
          */
@@ -170,8 +184,8 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
             return this;
         }
 
-        public Propagation.Factory build() {
-            Factory result = new Factory(this);
+        public MyPropagation.Factory build() {
+            Propagation.Factory result = new Factory(this);
             if (result.equals(FACTORY)) return FACTORY;
             return result;
         }
@@ -180,7 +194,9 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
         }
     }
 
-    /** Header that encodes all trace ID properties in one value. */
+    /**
+     * Header that encodes all trace ID properties in one value.
+     */
     static final String B3 = "b3";
     /**
      * 128 or 64-bit trace ID lower-hex encoded into 32 or 16 characters (required)
@@ -207,43 +223,51 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
      */
     static final String FLAGS = "X-B3-Flags";
 
-    static final class Factory extends Propagation.Factory implements Propagation<String> {
+    static final class Factory extends MyPropagation.Factory implements MyPropagation<String> {
         final InjectorFactory injectorFactory;
 
         Factory(FactoryBuilder builder) {
             injectorFactory = builder.injectorFactoryBuilder.build();
         }
 
-        @Override public List<String> keys() {
+        @Override
+        public List<String> keys() {
             return injectorFactory.keyNames();
         }
 
-        @Override public Propagation<String> get() {
+        @Override
+        public MyPropagation<String> get() {
             return this;
         }
 
-        @Override public <K1> Propagation<K1> create(KeyFactory<K1> keyFactory) {
+        @Override
+        public <K1> MyPropagation<K1> create(KeyFactory<K1> keyFactory) {
             return StringPropagationAdapter.create(this, keyFactory);
         }
 
-        @Override public boolean supportsJoin() {
+        @Override
+        public boolean supportsJoin() {
             return true;
         }
 
-        @Override public <R> Injector<R> injector(Setter<R, String> setter) {
+        @Override
+        public <R> Injector<R> injector(Setter<R, String> setter) {
             return injectorFactory.newInjector(setter);
         }
 
-        @Override public <R> Extractor<R> extractor(Getter<R, String> getter) {
+        @Override
+        public <R> Extractor<R> extractor(Getter<R, String> getter) {
             if (getter == null) throw new NullPointerException("getter == null");
             return new B3Extractor<>(this, getter);
         }
 
-        @Override public int hashCode() {
+        @Override
+        public int hashCode() {
             return injectorFactory.hashCode();
         }
 
-        @Override public boolean equals(Object o) {
+        @Override
+        public boolean equals(Object o) {
             if (o == this) return true;
             if (!(o instanceof MyB3Propagation.Factory)) return false;
 
@@ -251,12 +275,13 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
             return injectorFactory.equals(that.injectorFactory);
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return "MyB3Propagation";
         }
     }
 
-    static final class B3Extractor<R> implements Extractor<R> {
+    static final class B3Extractor<R> implements MyTraceContext.Extractor<R> {
         final Factory factory;
         final Getter<R, String> getter;
 
@@ -265,12 +290,13 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
             this.getter = getter;
         }
 
-        @Override public TraceContextOrSamplingFlags extract(R request) {
+        @Override
+        public MyTraceContextOrSamplingFlags extract(R request) {
             if (request == null) throw new NullPointerException("request == null");
 
             // try to extract single-header format
             String b3 = getter.get(request, B3);
-            TraceContextOrSamplingFlags extracted = b3 != null ? parseB3SingleFormat(b3) : null;
+            MyTraceContextOrSamplingFlags extracted = b3 != null ? MyB3SingleFormat.parseB3SingleFormat(b3) : null;
             if (extracted != null) return extracted;
 
             // Start by looking at the sampled state as this is used regardless
@@ -288,7 +314,7 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
                     sampledV = false;
                 } else {
                     Platform.get().log(SAMPLED_MALFORMED, sampled, null);
-                    return TraceContextOrSamplingFlags.EMPTY; // trace context is malformed so return empty
+                    return MyTraceContextOrSamplingFlags.EMPTY; // trace context is malformed so return empty
                 }
             } else if (sampled.equalsIgnoreCase("true")) { // old clients
                 sampledV = true;
@@ -296,7 +322,7 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
                 sampledV = false;
             } else {
                 Platform.get().log(SAMPLED_MALFORMED, sampled, null);
-                return TraceContextOrSamplingFlags.EMPTY; // Restart trace instead of propagating false
+                return MyTraceContextOrSamplingFlags.EMPTY; // Restart trace instead of propagating false
             }
 
             // The only flag we action is 1, but it could be that any integer is present.
@@ -307,24 +333,24 @@ public abstract class MyB3Propagation<K> implements Propagation<K> {
 
             // It is ok to go without a trace ID, if sampling or debug is set
             if (traceIdString == null) {
-                if (debug) return TraceContextOrSamplingFlags.DEBUG;
+                if (debug) return MyTraceContextOrSamplingFlags.DEBUG;
                 if (sampledV != null) {
                     return sampledV
-                            ? TraceContextOrSamplingFlags.SAMPLED
-                            : TraceContextOrSamplingFlags.NOT_SAMPLED;
+                            ? MyTraceContextOrSamplingFlags.SAMPLED
+                            : MyTraceContextOrSamplingFlags.NOT_SAMPLED;
                 }
             }
 
             // Try to parse the trace IDs into the context
-            TraceContext.Builder result = TraceContext.newBuilder();
+            MyTraceContext.Builder result = MyTraceContext.newBuilder();
             if (result.parseTraceId(traceIdString, TRACE_ID)
                     && result.parseSpanId(getter, request, SPAN_ID)
                     && result.parseParentId(getter, request, PARENT_SPAN_ID)) {
                 if (sampledV != null) result.sampled(sampledV.booleanValue());
                 if (debug) result.debug(true);
-                return TraceContextOrSamplingFlags.create(result.build());
+                return MyTraceContextOrSamplingFlags.create(result.build());
             }
-            return TraceContextOrSamplingFlags.EMPTY; // trace context is malformed so return empty
+            return MyTraceContextOrSamplingFlags.EMPTY; // trace context is malformed so return empty
         }
     }
 
