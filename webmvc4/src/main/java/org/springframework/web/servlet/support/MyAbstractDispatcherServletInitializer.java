@@ -133,9 +133,9 @@ public abstract class MyAbstractDispatcherServletInitializer extends AbstractCon
     protected abstract WebApplicationContext createServletApplicationContext();
 
     /**
-     * Create a {@link DispatcherServlet} (or other kind of {@link FrameworkServlet}-derived
+     * Create a {@link DispatcherServlet} (or other kind of {@link org.springframework.web.servlet.MyFrameworkServlet}-derived
      * dispatcher) with the specified {@link WebApplicationContext}.
-     * <p>Note: This allows for any {@link FrameworkServlet} subclass as of 4.2.3.
+     * <p>Note: This allows for any {@link org.springframework.web.servlet.MyFrameworkServlet} subclass as of 4.2.3.
      * Previously, it insisted on returning a {@link DispatcherServlet} or subclass thereof.
      */
     protected MyDispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
